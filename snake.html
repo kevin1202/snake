@@ -1,0 +1,255 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>贪吃精灵蛇</title>
+        <style type="text/css">
+        	#main{height:600px;width:701px;margin:2px auto;position:relative;}
+            #pannel {
+                margin-bottom: 15px;
+            }
+            
+            h2 {
+                text-align: center;
+            } #control {
+                position: relative;
+                left:122px;
+            } #pannel table {
+               	border:2px solid #000;
+			    border-collapse: collapse;
+                margin: 5px auto;
+            } #pannel table td {
+                border: 1px solid #fff;
+                width: 12px;
+                height: 12px;
+                font-size: 0px;
+                line-height: 0px;
+                overflow: hidden;
+            } #pannel table .snake {
+                background-color: green;
+            } #pannel table .food {
+                background-color: blue;
+            }
+        </style>
+        <script src="js/jquery-1.8.3.min.js" type="text/javascript">
+        </script>
+        <script type="text/javascript">
+            var direction = 'right';
+            var height = 0, width = 0, speed = 0;
+            var pos_food = new Position();
+            var pos_snake = new Array(new Position(15,15));
+            var interval = null;
+            function Init(){
+                var html = "<table>";
+                for (var y = 0; y < height; y++) {
+                    html += ("<tr>");
+                    for (var x = 0; x < width; x++) {
+                        html += '<td id="box_' + x + "_" + y + '"> </td>';
+                    }
+                    html += "</tr>";
+                }
+                html += "</table>";
+                $("#pannel").html(html);
+            }
+            
+            $(function(){
+                height = $("#selSize").find("option:selected").val();
+                width = $("#selSize").find("option:selected").val();
+                speed = $("#selSpeed").find("option:selected").val();
+                Init();
+                $("#btnStart").click(function(){
+                    createFood();
+                    interval = setInterval("snakeMove()", speed);
+                    $("#btnStart").attr("disabled", "disabled");
+                    $("#selSpeed").attr("disabled", "disabled");
+                    $("#selSize").attr("disabled", "disabled");
+                });
+                /*调速度按钮*/
+                $("#selSpeed").change(function(){
+                    speed = $(this).find("option:selected").val();
+                   
+                    
+                });
+                
+                $("#selSize").change(function(){
+                	
+                    width = $(this).find("option:selected").val();
+                    height = width;
+                    if (width==20){
+                    	$("#control").css("left","197px");
+                    }else if (width==30)
+                    	$("#control").css("left","122px");
+                   	else if (width==40){
+                		$("#control").css("left","47px");
+                    	}
+                    Init();
+                });
+            });
+            
+            function Position(x, y){
+                this.X = 0;
+                this.Y = 0;
+                if (arguments.length >= 1) {
+                    this.X = x;
+                }
+                if (arguments.length >= 2) {
+                    this.Y = y;
+                }
+            }
+            
+            $(document).keydown(function(evt){
+                evt = evt || window.event;
+                var key = evt.which || evt.keyCode;
+				
+                switch (key) {
+                    case 37:{
+                        if (direction != "right") {
+                            direction = "left";
+                        }
+                        break;
+                    }
+                    case 38:{
+                        if (direction != "down") {
+                            direction = "up";
+                        }
+                        break;
+                    }
+                    case 39:{
+                        if (direction != "left") {
+                            direction = "right";
+                        }
+                        break;
+                    }
+                    case 40:{
+                        if (direction != "up") {
+                            direction = "down";
+                        }
+                        break;
+                    }
+                }
+            });
+            
+            function createFood(){
+                $('#box_' + pos_food.X + '_' + pos_food.Y).attr("class", "");
+                var x = 0, y = 0;
+                var isCover = false;
+                do {
+                    x = parseInt(Math.random() * (width - 1));
+                    y = parseInt(Math.random() * (height - 1));
+                    if (pos_snake instanceof Array) {
+                        for (var i = 0; i < pos_snake.length; i++) {
+                            if (x == pos_snake[i].X && y == pos_snake[i].Y) {
+                                isCover = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                while (isCover);
+                pos_food.X = x;
+                pos_food.Y = y;
+                $('#box_' + pos_food.X + '_' + pos_food.Y).addClass("food");
+            }
+            
+            
+            function snakeMove(){
+                eat();
+                var head = pos_snake[pos_snake.length - 1];
+                $("#box_" + pos_snake[0].X + "_" + pos_snake[0].Y).removeClass("snake");
+                for (var i = 0; i < pos_snake.length - 1; i++) {
+                    pos_snake[i].X = pos_snake[i + 1].X;
+                    pos_snake[i].Y = pos_snake[i + 1].Y;
+                }
+                switch (direction) {
+                    case 'left':
+                        head.X--;
+                        break;
+                    case 'up':
+                        head.Y--;
+                        break;
+                    case 'down':
+                        head.Y++;
+                        break;
+                    case 'right':
+                        head.X++;
+                        break;
+                }
+                
+                pos_snake[pos_snake.length - 1] = head;
+                for (var i = 0; i < pos_snake.length; i++) {
+                    var isExits = false;
+                    for (var j = i + 1; j < pos_snake.length; j++) {
+                        if (pos_snake[j].X == pos_snake[i].X && pos_snake[j].Y == pos_snake[i].Y) {
+                            isExits = true;
+                            break;
+                        }
+                    }
+                    if (isExits) {
+                        clearInterval(interval);
+                        alert("咬到自己，游戏结束!");
+                        window.location.reload();
+                        break;
+                    }
+                    $("#box_" + pos_snake[i].X + "_" + pos_snake[i].Y).addClass("snake");
+                    if ($("#box_" + pos_snake[i].X + "_" + pos_snake[i].Y).length <= 0) {
+                        clearInterval(interval);
+                        alert("撞到墙了，游戏结束!");
+                        window.location.reload();
+                        break;
+                    }
+                }
+            }
+            
+            function eat(){
+                var head = pos_snake[pos_snake.length - 1];
+                var isEat = false;
+                switch (direction) {
+                    case 'left':{
+                        if (head.X == pos_food.X + 1 && head.Y == pos_food.Y) 
+                            isEat = true;
+                        break;
+                    }
+                    case 'up':{
+                        if (head.X == pos_food.X && head.Y == pos_food.Y + 1) 
+                            isEat = true;
+                        break;
+                    }
+                    case 'down':{
+                        if (head.X == pos_food.X && head.Y == pos_food.Y - 1) 
+                            isEat = true;
+                        break;
+                    }
+                    case 'right':{
+                        if (head.X == pos_food.X - 1 && head.Y == pos_food.Y) 
+                            isEat = true;
+                        break;
+                    }
+                }
+                if (isEat) {
+                    pos_snake[pos_snake.length] = new Position(pos_food.X, pos_food.Y);
+                    createFood();
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div id="main">
+        	<h2>贪食蛇游戏</h2>
+        <div id="pannel">
+        </div>
+        <div id="control">
+            <select id="selSize">
+                <option value="20">20*20</option>
+                <option value="30" selected="selected">30*30</option>
+                <option value="40">40*40</option>
+            </select>
+            <select id="selSpeed">
+                <option value="500">速度-慢</option>
+                <option value="250" selected="selected">速度-中</option>
+                <option value="100">速度-快</option>
+            </select>
+            <input type="button" value="开始" id="btnStart"/>
+        </div>
+        </div>
+    </body>
+</html>
